@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Tracker - Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            background: #f7f9fa;
+        }
+        
+        .container {
+            margin: 38px auto 0 auto;
+            max-width: 440px;
+            border-radius: 18px;
+            box-shadow: 0 6px 32px rgba(0, 0, 0, 0.07);
+        }
+        
+        .auth-logo {
+            font-size: 2.3rem;
+            margin-bottom: 14px;
+        }
+        
+        @media (max-width: 500px) {
+            .container {
+                margin-top: 0;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Welcome Screen -->
+        <div id="welcomeScreen" class="screen active">
+            <div class="auth-screen">
+                <div class="auth-logo">🌱</div>
+                <h1 class="auth-title">Carbon Tracker</h1>
+                <p class="auth-subtitle">
+                    Track your carbon footprint<br> and make a positive impact on our planet.
+                </p>
+                <button class="btn btn-primary" onclick="showScreen('loginScreen')">Login</button>
+                <button class="btn btn-secondary" onclick="showScreen('registerScreen')">Create Account</button>
+            </div>
+        </div>
+
+        <!-- Login Screen -->
+        <div id="loginScreen" class="screen">
+            <div class="auth-screen">
+                <div class="auth-logo">🌍</div>
+                <h1 class="auth-title">Welcome Back</h1>
+                <p class="auth-subtitle">Log in to continue tracking.</p>
+                <div id="loginAlert"></div>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="loginPassword" required>
+                    </div>
+                    <input type="submit" class="btn btn-primary" value="Login">
+                </form>
+                <div class="link-text">
+                    Don't have an account? <a href="#" onclick="showScreen('registerScreen'); return false;">Sign up</a>
+                </div>
+                <button class="btn btn-secondary" style="margin-top: 19px;" onclick="showScreen('welcomeScreen')">Back</button>
+            </div>
+        </div>
+
+        <!-- Register Screen -->
+        <div id="registerScreen" class="screen">
+            <div class="auth-screen">
+                <div class="auth-logo">✨</div>
+                <h1 class="auth-title">Create Account</h1>
+                <p class="auth-subtitle">Start tracking your impact today.</p>
+                <div id="registerAlert"></div>
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-input" id="registerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="registerEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="registerPassword" required minlength="6">
+                    </div>
+                    <input type="submit" class="btn btn-primary" value="Create Account">
+                </form>
+                <div class="link-text">
+                    Already registered? <a href="#" onclick="showScreen('loginScreen'); return false;">Login</a>
+                </div>
+                <button class="btn btn-secondary" style="margin-top: 19px;" onclick="showScreen('welcomeScreen')">Back</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showAlert(containerId, message, type) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => container.innerHTML = '', 3000);
+        }
+        async function handleRegister(event) {
+            event.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        password
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showAlert('registerAlert', 'Account created successfully!', 'success');
+                    setTimeout(() => showScreen('loginScreen'), 1200);
+                } else {
+                    showAlert('registerAlert', data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('registerAlert', 'An error occurred', 'error');
+            }
+        }
+        async function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = '/dashboard';
+                } else {
+                    showAlert('loginAlert', data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('loginAlert', 'An error occurred', 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>

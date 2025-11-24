@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Tracker - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Dashboard Home Screen -->
+        <div id="dashboardScreen" class="screen active">
+            <div class="header">
+                <h1 style="font-size:1.35rem;font-weight:600;letter-spacing:0.01em;">Today's Carbon Footprint</h1>
+                <p id="dashboardDate" style="font-size:0.98rem;margin-top:4px;"></p>
+            </div>
+            <div class="dashboard">
+                <div class="co2-card">
+                    <div class="co2-label">Your Daily Score</div>
+                    <div class="co2-value"><span id="totalCO2">0.0</span></div>
+                    <div class="co2-label">kg CO₂</div>
+                    <div class="co2-status" id="statusBadge"></div>
+                </div>
+                <div class="category-grid">
+                    <div class="category-item" onclick="showScreen('travelScreen')">
+                        <div class="category-icon">🚗</div>
+                        <div class="category-name">Travel</div>
+                        <div class="category-value"><span id="travelCO2">0.0</span></div>
+                    </div>
+                    <div class="category-item" onclick="showScreen('energyScreen')">
+                        <div class="category-icon">⚡</div>
+                        <div class="category-name">Energy</div>
+                        <div class="category-value"><span id="energyCO2">0.0</span></div>
+                    </div>
+                    <div class="category-item" onclick="showScreen('dietScreen')">
+                        <div class="category-icon">🍽️</div>
+                        <div class="category-name">Diet</div>
+                        <div class="category-value"><span id="dietCO2">0.0</span></div>
+                    </div>
+                </div>
+                <div class="section-title">Smart Suggestions</div>
+                <div id="suggestionsContainer"></div>
+                <div class="section-title">Achievements</div>
+                <div class="badge-container">
+                    <div class="badge" id="badge3day">
+                        <div class="badge-icon">🔥</div>
+                        <div class="badge-name">3 Day Streak</div>
+                    </div>
+                    <div class="badge" id="badge7day">
+                        <div class="badge-icon">⭐</div>
+                        <div class="badge-name">7 Day Streak</div>
+                    </div>
+                    <div class="badge" id="badge30day">
+                        <div class="badge-icon">💎</div>
+                        <div class="badge-name">30 Day Streak</div>
+                    </div>
+                    <div class="badge" id="badgeLow">
+                        <div class="badge-icon">🌿</div>
+                        <div class="badge-name">Low Carbon</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Travel Input Screen -->
+        <div id="travelScreen" class="screen">
+            <div class="header">
+                <h1 style="font-size:1.22rem;font-weight:500;">Travel Log</h1>
+                <p class="input-subtitle">Travel activity (in kilometers)</p>
+            </div>
+            <div class="input-screen pb-80">
+                <div class="input-group">
+                    <label class="input-label">Transport Mode</label>
+                    <select id="travelMode" class="form-input">
+                    <option value="car">Car</option>
+                    <option value="bike">Bike</option>
+                    <option value="public">Public Transport</option>
+                    <option value="walk">Walk</option>
+                </select>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Distance (km)</label>
+                    <input type="number" class="form-input" id="travelDistance" value="0" min="0" step="0.1" placeholder="e.g., 12.5">
+                </div>
+                <button class="btn btn-primary" onclick="saveTravel()">Save Travel</button>
+            </div>
+        </div>
+
+        <!-- Energy Input Screen -->
+        <div id="energyScreen" class="screen">
+            <div class="header">
+                <h1 style="font-size:1.22rem;font-weight:500;">Home Energy Log</h1>
+                <p class="input-subtitle">Household energy info for today</p>
+            </div>
+            <div class="input-screen pb-80">
+                <div class="input-group">
+                    <label class="input-label">Electricity Usage</label>
+                    <select id="energyLevel" class="form-input">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                </select>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">AC/Fan Hours</label>
+                    <input type="number" class="form-input" id="acHours" value="0" min="0" step="0.5" placeholder="Hours per day">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Washing Machine Use (hours)</label>
+                    <input type="number" class="form-input" id="washingMachine" value="0" min="0" step="0.1" placeholder="e.g., 1.5">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Area Type</label>
+                    <select id="location" class="form-input">
+                    <option value="urban">Urban</option>
+                    <option value="rural">Rural</option>
+                </select>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Season</label>
+                    <select id="season" class="form-input">
+                    <option value="summer">Summer</option>
+                    <option value="monsoon">Monsoon</option>
+                    <option value="winter">Winter</option>
+                    <option value="other">Other</option>
+                </select>
+                </div>
+                <button class="btn btn-primary" onclick="saveEnergy()">Save Energy</button>
+            </div>
+        </div>
+
+        <!-- Diet Input Screen (Expandable Cards) -->
+        <div id="dietScreen" class="screen">
+            <div class="header">
+                <h1 style="font-size:1.22rem;font-weight:500;">Diet Log</h1>
+                <p class="input-subtitle">Fill for each time of day (or tick "No Meal")</p>
+            </div>
+            <div class="input-screen pb-80">
+                <form id="dietForm" onsubmit="saveDiet(event)">
+                    <div class="diet-cards-container">
+                        <div class="diet-card" id="card_morning">
+                            <div class="diet-time-row" onclick="toggleDietCard('morning')">
+                                <span class="diet-time-title">Morning</span>
+                                <label><input type="checkbox" id="noMeal_morning" onclick="toggleNoMeal('morning');event.stopPropagation()"> No Meal</label>
+                                <span class="expand-toggle" id="expand_morning">&#9660;</span>
+                            </div>
+                            <div class="meal-inputs-row meal-inputs-morning">
+                                <label><span>🥩</span> Red Meat <input type="number" min="0" value="0" id="redMeat_morning" class="form-input" style="width:70px;"></label>
+                                <label><span>🍗</span> White Meat <input type="number" min="0" value="0" id="whiteMeat_morning" class="form-input" style="width:70px;"></label>
+                                <label><span>🥛</span> Dairy <input type="number" min="0" value="0" id="dairy_morning" class="form-input" style="width:70px;"></label>
+                                <label><span>🥗</span> Plant <input type="number" min="0" value="0" id="plant_morning" class="form-input" style="width:70px;"></label>
+                            </div>
+                        </div>
+                        <div class="diet-card" id="card_afternoon">
+                            <div class="diet-time-row" onclick="toggleDietCard('afternoon')">
+                                <span class="diet-time-title">Afternoon</span>
+                                <label><input type="checkbox" id="noMeal_afternoon" onclick="toggleNoMeal('afternoon');event.stopPropagation()"> No Meal</label>
+                                <span class="expand-toggle" id="expand_afternoon">&#9660;</span>
+                            </div>
+                            <div class="meal-inputs-row meal-inputs-afternoon">
+                                <label><span>🥩</span> Red Meat <input type="number" min="0" value="0" id="redMeat_afternoon" class="form-input" style="width:70px;"></label>
+                                <label><span>🍗</span> White Meat <input type="number" min="0" value="0" id="whiteMeat_afternoon" class="form-input" style="width:70px;"></label>
+                                <label><span>🥛</span> Dairy <input type="number" min="0" value="0" id="dairy_afternoon" class="form-input" style="width:70px;"></label>
+                                <label><span>🥗</span> Plant <input type="number" min="0" value="0" id="plant_afternoon" class="form-input" style="width:70px;"></label>
+                            </div>
+                        </div>
+                        <div class="diet-card" id="card_evening">
+                            <div class="diet-time-row" onclick="toggleDietCard('evening')">
+                                <span class="diet-time-title">Evening</span>
+                                <label><input type="checkbox" id="noMeal_evening" onclick="toggleNoMeal('evening');event.stopPropagation()"> No Meal</label>
+                                <span class="expand-toggle" id="expand_evening">&#9660;</span>
+                            </div>
+                            <div class="meal-inputs-row meal-inputs-evening">
+                                <label><span>🥩</span> Red Meat <input type="number" min="0" value="0" id="redMeat_evening" class="form-input" style="width:70px;"></label>
+                                <label><span>🍗</span> White Meat <input type="number" min="0" value="0" id="whiteMeat_evening" class="form-input" style="width:70px;"></label>
+                                <label><span>🥛</span> Dairy <input type="number" min="0" value="0" id="dairy_evening" class="form-input" style="width:70px;"></label>
+                                <label><span>🥗</span> Plant <input type="number" min="0" value="0" id="plant_evening" class="form-input" style="width:70px;"></label>
+                            </div>
+                        </div>
+                        <div class="diet-card" id="card_night">
+                            <div class="diet-time-row" onclick="toggleDietCard('night')">
+                                <span class="diet-time-title">Night</span>
+                                <label><input type="checkbox" id="noMeal_night" onclick="toggleNoMeal('night');event.stopPropagation()"> No Meal</label>
+                                <span class="expand-toggle" id="expand_night">&#9660;</span>
+                            </div>
+                            <div class="meal-inputs-row meal-inputs-night">
+                                <label><span>🥩</span> Red Meat <input type="number" min="0" value="0" id="redMeat_night" class="form-input" style="width:70px;"></label>
+                                <label><span>🍗</span> White Meat <input type="number" min="0" value="0" id="whiteMeat_night" class="form-input" style="width:70px;"></label>
+                                <label><span>🥛</span> Dairy <input type="number" min="0" value="0" id="dairy_night" class="form-input" style="width:70px;"></label>
+                                <label><span>🥗</span> Plant <input type="number" min="0" value="0" id="plant_night" class="form-input" style="width:70px;"></label>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" type="submit" style="margin-top:24px;">Save Diet</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Trends Screen -->
+        <div id="trendsScreen" class="screen">
+            <div class="header">
+                <h1 style="font-size:1.22rem;font-weight:500;">Weekly Trends</h1>
+                <p class="input-subtitle">Your last 7 days</p>
+            </div>
+            <div class="dashboard">
+                <div class="chart-container">
+                    <div class="section-title">7-Day Trend Line</div>
+                    <canvas id="weeklyLineChart" height="160"></canvas>
+                </div>
+                <div class="comparison-card">
+                    <div class="comparison-text" id="comparisonText">You're doing great! Keep it up! 🌟</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Screen -->
+        <div id="profileScreen" class="screen">
+            <div class="header">
+                <h1 style="font-size:1.22rem;font-weight:500;">Profile</h1>
+                <p id="userName" style="font-size:1.09rem; color:#197d54;">{{ user_name }}</p>
+            </div>
+            <div class="dashboard">
+                <div class="chart-container">
+                    <div class="section-title">Statistics</div>
+                    <div style="margin-top:14px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 11px;">
+                            <span>Current Streak</span>
+                            <strong id="currentStreak">0 days</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 11px;">
+                            <span>Total Days Tracked</span>
+                            <strong id="totalDays">0 days</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Avg Daily CO₂</span>
+                            <strong id="avgDaily">0.0 kg</strong>
+                        </div>
+                    </div>
+                </div>
+                <a href="/logout" class="logout-btn">Logout</a>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="nav-bottom">
+            <div class="nav-item active" onclick="showMainScreen('dashboardScreen')">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">Home</div>
+            </div>
+            <div class="nav-item" onclick="showMainScreen('trendsScreen')">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">Trends</div>
+            </div>
+            <div class="nav-item" onclick="showMainScreen('profileScreen')">
+                <div class="nav-icon">👤</div>
+                <div class="nav-label">Profile</div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+
+</html>
